@@ -89,8 +89,6 @@
     const observer = new MutationObserver(async (mutations) => {
         const resultElement = document.querySelector('[data-e2e-locator="submission-result"]');
         if (resultElement && resultElement.innerText.trim() === 'Accepted') {
-            // Check storage for key before auto-triggering
-            const data = await chrome.storage.local.get(['geminiKey']);
             triggerBlogGeneration();
         }
     });
