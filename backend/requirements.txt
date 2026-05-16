@@ -4,3 +4,8 @@ pydantic
 google-generativeai
 requests
 python-dotenv
+twilio
+apscheduler
+motor
+pytz
+pymongo

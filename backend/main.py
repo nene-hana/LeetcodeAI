@@ -5,9 +5,14 @@ from ai import generate_blog
 from devto import post_to_platform
 import uvicorn
 from dotenv import load_dotenv
+import os
 
 from alerts.scheduler import scheduler
 from services.reminder_scheduler import start_scheduler
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from twilio.rest import Client
+import motor.motor_asyncio
 
 load_dotenv()
 
@@ -25,6 +30,27 @@ app.add_middleware(
 )
 
 
+# -----------------------------
+# Twilio Setup
+# -----------------------------
+twilio_client = Client(
+    os.getenv("TWILIO_ACCOUNT_SID"),
+    os.getenv("TWILIO_AUTH_TOKEN")
+)
+
+# -----------------------------
+# MongoDB Setup
+# -----------------------------
+mongo_client = motor.motor_asyncio.AsyncIOMotorClient(
+    os.getenv("MONGODB_URI")
+)
+
+db = mongo_client.leetcodeai
+
+
+# -----------------------------
+# Models
+# -----------------------------
 class Problem(BaseModel):
     title: str
     description: str
@@ -33,12 +59,21 @@ class Problem(BaseModel):
     client_time: str | None = None
 
 
+class ReminderPreference(BaseModel):
+    whatsapp_number: str
+    reminder_time: str = "09:00"
+    timezone: str = "Asia/Kolkata"
+    is_opted_in: bool = True
+
+
+# -----------------------------
+# Startup Event
+# -----------------------------
 @app.on_event("startup")
 async def startup_event():
     """
     Start background schedulers when server starts.
     """
-
 
     try:
         start_scheduler()
@@ -47,6 +82,9 @@ async def startup_event():
         print(f"Reminder scheduler failed to start: {e}")
 
 
+# -----------------------------
+# Health Check
+# -----------------------------
 @app.get("/")
 def health_check():
     return {
@@ -55,6 +93,9 @@ def health_check():
     }
 
 
+# -----------------------------
+# Blog Generator Endpoint
+# -----------------------------
 @app.post("/generate-blog")
 def create_blog(problem: Problem):
     """
@@ -71,6 +112,7 @@ def create_blog(problem: Problem):
 
     try:
         blog_content = generate_blog(problem)
+
     except Exception as e:
         return {
             "status": "error",
@@ -92,6 +134,9 @@ def create_blog(problem: Problem):
         }
 
 
+# -----------------------------
+# Reminder Infrastructure
+# -----------------------------
 @app.get("/reminder-health")
 def reminder_health():
     """
@@ -104,6 +149,36 @@ def reminder_health():
     }
 
 
+@app.post("/reminder/subscribe")
+async def subscribe(pref: ReminderPreference):
+    await db.preferences.update_one(
+        {"whatsapp_number": pref.whatsapp_number},
+        {"$set": pref.dict()},
+        upsert=True
+    )
+
+    return {
+        "status": "success",
+        "message": "Subscribed!"
+    }
+
+
+@app.post("/reminder/unsubscribe")
+async def unsubscribe(data: dict):
+    await db.preferences.update_one(
+        {"whatsapp_number": data["whatsapp_number"]},
+        {"$set": {"is_opted_in": False}}
+    )
+
+    return {
+        "status": "success",
+        "message": "Unsubscribed!"
+    }
+
+
+# -----------------------------
+# Run Server
+# -----------------------------
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
