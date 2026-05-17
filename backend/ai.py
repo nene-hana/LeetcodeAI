@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 import os
 import time
 import logging
@@ -22,43 +22,58 @@ INITIAL_BACKOFF_SECONDS = 35  # Free tier asks to retry after ~35s
 
 
 def _build_prompt(problem, current_time: str) -> str:
+    custom_instructions = ""
+
+    default_prompt =  f"""
+        You are a professional technical writer and competitive programmer.
+
+        Generate a highly engaging, beginner-friendly Dev.to blog post about a LeetCode problem.
+
+        Author Account: {problem.author}
+        Publishing Time: {current_time}
+        Title: {problem.title}
+
+        Problem Description:
+        {problem.description}
+
+        Solution Code:
+        {problem.code}
+
+        Strictly follow this structure:
+        1. Title (Use an engaging # Title instead of YAML)
+        2. Problem Explanation (explain it simply, as if to a beginner)
+        3. Intuition (the "aha!" moment)
+        4. Approach (step-by-step logic)
+        5. Code (formatted clearly inside markdown code blocks, specify language if obvious)
+        6. Time & Space Complexity Analysis
+        7. Key Takeaways
+        8. Submission Details (MUST include the Author Account [{problem.author}] and the Time Published [{current_time}] in a concluding footnote)
+
+        CRITICAL INSTRUCTIONS:
+        - DO NOT wrap the output in ```markdown or ``` tags. Return raw markdown text.
+        - DO NOT output YAML frontmatter (no --- blocks).
+        - TABLE FORMATTING (STRICT RULES):
+        - If you use a Markdown table, it MUST be perfectly formatted to render correctly.
+        - Each row (header, separator, or data) MUST start with `|` and end with `|`.
+        - A table row MUST be on exactly ONE single line. DO NOT use line breaks inside rows.
+        - The header row, separator row (e.g., `|---|---|`), and all data rows MUST have the EXACT same number of columns.
+        - CELL CONTENT: If a cell contains a bitwise OR operator `|` or any pipe character, you MUST escape it as `\\|` (e.g., `(a \\| b)`). Failing to escape pipes inside cells will break the table structure.
+        - Ensure the separator line is continuous (no line breaks) and uses at least 3 dashes per column.
+        - Always provide an EMPTY LINE before and after the table to ensure correct rendering.
+    """
+
+    if hasattr(problem,"custom_prompt") and problem.custom_prompt:
+        cleaned_custom_prompt = problem.custom_prompt.strip()
+        if cleaned_custom_prompt:
+            custom_instructions =  f"""
+                Additional User Prompt Preferences:
+                {cleaned_custom_prompt}
+            """
+    
     return f"""
-You are a professional technical writer and competitive programmer.
-
-Generate a highly engaging, beginner-friendly Dev.to blog post about a LeetCode problem.
-
-Author Account: {problem.author}
-Publishing Time: {current_time}
-Title: {problem.title}
-
-Problem Description:
-{problem.description}
-
-Solution Code:
-{problem.code}
-
-Strictly follow this structure:
-1. Title (Use an engaging # Title instead of YAML)
-2. Problem Explanation (explain it simply, as if to a beginner)
-3. Intuition (the "aha!" moment)
-4. Approach (step-by-step logic)
-5. Code (formatted clearly inside markdown code blocks, specify language if obvious)
-6. Time & Space Complexity Analysis
-7. Key Takeaways
-8. Submission Details (MUST include the Author Account [{problem.author}] and the Time Published [{current_time}] in a concluding footnote)
-
-CRITICAL INSTRUCTIONS:
-- DO NOT wrap the output in ```markdown or ``` tags. Return raw markdown text.
-- DO NOT output YAML frontmatter (no --- blocks).
-- TABLE FORMATTING (STRICT RULES):
-  - If you use a Markdown table, it MUST be perfectly formatted to render correctly.
-  - Each row (header, separator, or data) MUST start with `|` and end with `|`.
-  - A table row MUST be on exactly ONE single line. DO NOT use line breaks inside rows.
-  - The header row, separator row (e.g., `|---|---|`), and all data rows MUST have the EXACT same number of columns.
-  - CELL CONTENT: If a cell contains a bitwise OR operator `|` or any pipe character, you MUST escape it as `\\|` (e.g., `(a \\| b)`). Failing to escape pipes inside cells will break the table structure.
-  - Ensure the separator line is continuous (no line breaks) and uses at least 3 dashes per column.
-  - Always provide an EMPTY LINE before and after the table to ensure correct rendering.
-"""
+            {default_prompt}
+            {custom_instructions}
+            """
 
 
 def _clean_response(text: str) -> str:
@@ -86,7 +101,7 @@ def generate_blog(problem) -> str:
     if not api_key:
         raise Exception("GEMINI_API_KEY is not set. Add it to backend/.env")
 
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
     current_time = (
         problem.client_time
@@ -99,11 +114,13 @@ def generate_blog(problem) -> str:
 
     for model_name in MODEL_FALLBACK_CHAIN:
         logger.info("Trying model: %s", model_name)
-        model = genai.GenerativeModel(model_name)
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                response = model.generate_content(prompt)
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
 
                 if not response.text:
                     raise Exception("Received empty response from Gemini API.")
@@ -114,7 +131,7 @@ def generate_blog(problem) -> str:
                 error_str = str(e)
 
                 # --- Leaked / invalid key: no point retrying ---
-                if "403" in error_str or "leaked" in error_str.lower() or "API key" in error_str:
+                if "403" in error_str and ("leaked" in error_str.lower() or "invalid" in error_str.lower()):
                     raise Exception(
                         "Your Gemini API key is invalid or has been reported as leaked. "
                         "Please generate a new key at https://aistudio.google.com/app/apikey "

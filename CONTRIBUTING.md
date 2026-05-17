@@ -121,11 +121,19 @@ Create a `.env` file inside the `backend/` directory:
 # backend/.env
 GEMINI_API_KEY=your_google_gemini_key_here
 DEVTO_API_KEY=your_devto_api_key_here
+HASHNODE_TOKEN=your_hashnode_token_here
+HASHNODE_PUBLICATION_ID=your_hashnode_publication_id_here
+MEDIUM_TOKEN=your_medium_integration_token_here
+MEDIUM_USER_ID=your_medium_user_id_here
+BLOG_WEBHOOK_URL=https://your-blog.example.com/api/publish
 ```
 
 Where to get your keys:
 - **Gemini API Key** → [Google AI Studio](https://aistudio.google.com/app/apikey)
 - **Dev.to API Key** → [Dev.to Settings → Extensions](https://dev.to/settings/extensions)
+- **Hashnode** → create a developer token and copy the publication ID for the blog you want to publish to
+- **Medium** → create an integration token and set the target Medium user ID
+- **Personal blog webhook** → expose an endpoint that accepts `title`, `body_markdown`, `tags`, `published`, and `source`
 
 > ⚠️ **Never commit your `.env` file.** It is already in `.gitignore`.
 
