@@ -29,6 +29,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             })
             .then(response => response.json())
             .then(data => {
+                const generatedBlog =
+                    data.data?.blog_content || "";
+
+                chrome.runtime.sendMessage({
+                    type: 'BLOG_GENERATED',
+                    blog: generatedBlog,
+                    title: title
+            });
+
                 if (data.status === 'success' || data.status === 'partial_success') {
                     const platforms = data.data?.platforms || [];
                     const postedPlatforms = platforms

@@ -171,13 +171,30 @@
     </fieldset>
     
     <button id="generateBtn">Generate Blog</button>
+
+    <div id="exportSection" style="display:none; margin-top:12px;">
+        <button id="exportMarkdownBtn"
+            style="margin-bottom:8px; background:#2d7ef7;">
+            Export Markdown
+        </button>
+
+        <button id="exportHTMLBtn"
+            style="margin-bottom:8px; background:#27ae60;">
+            Export HTML
+        </button>
+
+        <button id="exportPDFBtn"
+            style="background:#e74c3c;">
+            Export PDF
+        </button>
+    </div>
     
     <div id="status">Ready to blog! 🚀</div>
 <button id="dashboardBtn" style="margin-top:8px;background:#1a1a2e;font-size:13px;padding:10px;color:#f7a01a;width:100%;border-radius:8px;cursor:pointer;border:1px solid #f7a01a;">📊 View Dashboard</button>    
     <div class="footer">
         Powered by Gemini & LeetLog AI
     </div>
-
+    <script src="html2pdf.bundle.min.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

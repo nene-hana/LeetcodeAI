@@ -1,3 +1,15 @@
+let generatedBlogMarkdown = "";
+let generatedProblemTitle = "";
+function convertMarkdownToHTML(markdown) {
+    return markdown
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+        .replace(/\*(.*)\*/gim, '<i>$1</i>')
+        .replace(/\n/gim, '<br>');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const statusEl = document.getElementById('status');
     const platformInputs = Array.from(document.querySelectorAll('input[name="platform"]'));
@@ -94,6 +106,19 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const statusEl = document.getElementById('status');
     const btn = document.getElementById('generateBtn');
+
+    if (request.type === 'BLOG_GENERATED') {
+
+    generatedBlogMarkdown =
+        request.blog || "";
+
+    generatedProblemTitle =
+        request.title || "leetcode-blog";
+
+    document
+        .getElementById("exportSection")
+        .style.display = "block";
+}
     
     if (request.type === 'STATUS_UPDATE') {
         statusEl.innerText = request.message;
@@ -120,4 +145,92 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 document.getElementById('dashboardBtn').addEventListener('click', () => {
   chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+});
+document
+  .getElementById("exportMarkdownBtn")
+  ?.addEventListener("click", () => {
+
+    const blob = new Blob(
+      [generatedBlogMarkdown],
+      { type: "text/markdown" }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+      `${generatedProblemTitle}.md`;
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+document
+  .getElementById("exportHTMLBtn")
+  ?.addEventListener("click", () => {
+
+    const html =
+      convertMarkdownToHTML(
+        generatedBlogMarkdown
+      );
+
+    const blob = new Blob(
+      [html],
+      { type: "text/html" }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+      `${generatedProblemTitle}.html`;
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+document
+  .getElementById("exportPDFBtn")
+  ?.addEventListener("click", () => {
+
+    const container =
+      document.createElement("div");
+
+    container.style.padding = "20px";
+
+    container.innerHTML =
+      convertMarkdownToHTML(
+        generatedBlogMarkdown
+      );
+
+    html2pdf()
+      .set({
+        margin: 0.5,
+        filename:
+          `${generatedProblemTitle}.pdf`,
+        image: {
+          type: "jpeg",
+          quality: 1
+        },
+        html2canvas: {
+          scale: 2
+        },
+        jsPDF: {
+          unit: "in",
+          format: "a4",
+          orientation: "portrait"
+        }
+      })
+      .from(container)
+      .save();
 });
