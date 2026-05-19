@@ -200,7 +200,7 @@ The backend can be deployed for free on [Render](https://render.com/).
 
 ## 🤝 Contributing
 
-We ❤️ contributions! LeetLog AI is part of **GSSoC 2026** and welcomes developers of all experience levels.
+We ❤️ contributions! LeetLog AI is part of **GSSoC 2026** and welcomes contributors of all experience levels, including beginners who are getting started with open source.
 
 Please read our **[CONTRIBUTING.md](CONTRIBUTING.md)** for:
 - How to set up your development environment
