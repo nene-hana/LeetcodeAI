@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>LeetLog AI</title>
+    <style>
+        :root {
+            --primary: #f7a01a;
+            --primary-hover: #e58a00;
+            --bg: #ffffff;
+            --text: #333333;
+            --text-small: #666666;
+            --border: #dddddd;
+            --error: #e74c3c;
+            --success: #27ae60;
+        }
+        body { 
+            width: 320px; 
+            padding: 20px; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            border-radius: 12px;
+        }
+        h2 { margin-top: 0; color: #1a1a1a; font-size: 22px; font-weight: 700; }
+        p { font-size: 13px; color: var(--text-small); margin-bottom: 20px; }
+        
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--text-small);
+            margin-bottom: 5px;
+            margin-left: 2px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: var(--primary);
+        }
+        
+        button { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            width: 100%; 
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(247, 160, 26, 0.2);
+        }
+        button:hover { 
+            background-color: var(--primary-hover); 
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        button:disabled { 
+            background-color: #cccccc; 
+            cursor: not-allowed; 
+            box-shadow: none;
+            transform: none;
+        }
+        
+        #status { 
+            margin-top: 18px; 
+            font-weight: 600; 
+            font-size: 12px; 
+            color: var(--text-small);
+            padding: 8px;
+            border-radius: 6px;
+            background: #f9f9f9;
+            min-height: 18px;
+        }
+        .error-status { color: var(--error); background: #fdf2f2 !important; }
+        .success-status { color: var(--success); background: #f2fdf5 !important; }
+        .warning-status { color: var(--primary-hover); background: #fff8eb !important; }
+        
+        .footer {
+            margin-top: 20px;
+            font-size: 10px;
+            color: #999;
+        }
+        .platform-panel {
+            text-align: left;
+            margin-bottom: 16px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .platform-panel legend {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-small);
+            padding: 0 4px;
+        }
+        .platform-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text);
+            text-transform: none;
+            font-weight: 600;
+        }
+        .platform-option input {
+            width: auto;
+            margin: 0;
+            accent-color: var(--primary);
+        }
+        .draft-option {
+            border-top: 1px solid var(--border);
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>LeetLog AI</h2>
+    <p>Generate a professional Dev.to blog post for your current LeetCode problem instantly.</p>
+    <div class="input-group">
+        <label for="customPrompt">Custom Prompt (Optional)</label>
+        <textarea id="customPrompt" placeholder="e.g. Make it more humorous, add more examples..." 
+            style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; font-size:13px; box-sizing:border-box; resize:vertical; min-height:70px; outline:none; font-family:inherit;"></textarea>
+    </div>
+    <p>Generate and publish a professional LeetCode blog post instantly.</p>
+
+    <fieldset class="platform-panel">
+        <legend>Publish to</legend>
+        <label class="platform-option">
+            <input type="checkbox" name="platform" value="devto" checked>
+            Dev.to
+        </label>
+        <label class="platform-option">
+            <input type="checkbox" name="platform" value="hashnode">
+            Hashnode
+        </label>
+        <label class="platform-option">
+            <input type="checkbox" name="platform" value="medium">
+            Medium
+        </label>
+        <label class="platform-option">
+            <input type="checkbox" name="platform" value="webhook">
+            Personal blog webhook
+        </label>
+        <label class="platform-option draft-option">
+            <input type="checkbox" id="draftMode">
+            Publish as draft
+        </label>
+    </fieldset>
+    
+    <button id="generateBtn">Generate Blog</button>
+    
+    <div id="status">Ready to blog! 🚀</div>
+<button id="dashboardBtn" style="margin-top:8px;background:#1a1a2e;font-size:13px;padding:10px;color:#f7a01a;width:100%;border-radius:8px;cursor:pointer;border:1px solid #f7a01a;">📊 View Dashboard</button>    
+    <div class="footer">
+        Powered by Gemini & LeetLog AI
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
