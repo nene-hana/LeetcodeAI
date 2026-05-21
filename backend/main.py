@@ -129,7 +129,7 @@ async def create_blog(problem: Problem):
         )
     except Exception as e:
         return {"status": "error", "message": f"Publishing failure: {str(e)}"}
-    
+
     try:
         record = PublishRecord(
             title=problem.title,
