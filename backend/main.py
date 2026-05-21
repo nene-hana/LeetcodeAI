@@ -127,7 +127,10 @@ async def create_blog(problem: Problem):
             if successful
             else "error"
         )
-
+    except Exception as e:
+        return {"status": "error", "message": f"Publishing failure: {str(e)}"}
+    
+    try:
         record = PublishRecord(
             title=problem.title,
             date=datetime.now(timezone.utc).isoformat(),
@@ -135,15 +138,28 @@ async def create_blog(problem: Problem):
             status=overall_status,
             author=problem.author,
         )
-        await db.problem_info.update_one(record.model_dump(), upsert=True)
 
-        return {
-            "status": overall_status,
-            "data": {"blog_content": blog_content, "platforms": platform_results},
-        }
+        await db.problem_info.update_one(
+            {
+                "title": problem.title,
+                "author": problem.author,
+            },
+            {
+                "$set": record.model_dump(),
+            },
+            upsert=True,
+        )
 
     except Exception as e:
-        return {"status": "error", "message": f"Publishing failure: {str(e)}"}
+        print(f"Database logging failed: {e}")
+
+    return {
+        "status": overall_status,
+        "data": {
+            "blog_content": blog_content,
+            "platforms": platform_results,
+        },
+    }
 
 
 # dashboard endpoints
@@ -209,8 +225,18 @@ async def get_dashboard_history(
 
 @app.post("/dashboard/record")
 async def record_publish(record: PublishRecord):
-    await db.problem_info.update_one(record.model_dump(), upsert=True)
+    await db.problem_info.update_one(
+        {
+            "title": record.title,
+            "author": record.author
+        },
+        {
+            "$set": record.model_dump()
+        },
+        upsert=True
+    )
     return {"status": "ok"}
+
 
 
 # -----------------------------
