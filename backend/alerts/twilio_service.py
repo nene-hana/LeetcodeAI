@@ -23,11 +23,11 @@ def make_call(to_number: str, audio_url: str = None, text_to_say: str = None):
         # Add 'angry' tone using SSML prosody (faster, louder, lower pitch)
         # And completely map the string to Devanagari for perfect Hindi pronunciation
         if "6 Lakh" in text_to_say:
-            spoken_text = '<prosody rate="fast" volume="x-loud" pitch="low">छह लाख की मेहनत करके, पैंतीस लाख के सपने नहीं देखे जाते. डी एस ए सॉल्व कर चल!</prosody>'
+            spoken_text = 'छह लाख की मेहनत करके, <break time="400ms"/> पैंतीस लाख के सपने <emphasis level="strong">नहीं</emphasis> देखे जाते! <break time="500ms"/> <prosody rate="fast" volume="x-loud" pitch="low">डी एस ए सॉल्व कर चल!</prosody>'
         else:
             spoken_text = text_to_say.replace("Lakh", "Laakh").replace("krke", "karke").replace("chl", "chal")
             
-        twiml = f"<Response><Say voice='Polly.Aditi' language='hi-IN'>{spoken_text}</Say></Response>"
+        twiml = f"<Response><Say voice='Google.hi-IN-Wavenet-B' language='hi-IN'>{spoken_text}</Say></Response>"
         
     call = client.calls.create(
         to=to_number,
