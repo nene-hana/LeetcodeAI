@@ -43,6 +43,32 @@ async def _check_unsolved_users_async():
                 print(f"WhatsApp message sent successfully to {phone}!")
             except Exception as e:
                 print(f"Failed to send WhatsApp message to {phone}:", e)
+                
+            try:
+                # 1. Generate Audio via ElevenLabs
+                from alerts.elevenlabs_service import generate_audio
+                from alerts.twilio_service import make_call
+                
+                print("Generating audio via ElevenLabs...")
+                audio_file = generate_audio(message)
+                
+                # 2. Construct public URL to the static file
+                # If running on Render, construct the correct host
+                backend_url = os.getenv("BACKEND_URL", "https://leetcodeai-backend.onrender.com")
+                # Ensure no trailing slash
+                if backend_url.endswith("/"):
+                    backend_url = backend_url[:-1]
+                
+                audio_url = f"{backend_url}/{audio_file}"
+                print(f"Audio available at: {audio_url}")
+                
+                # 3. Make the Voice Call via Twilio
+                print(f"Making phone call to {phone}...")
+                call_sid = make_call(phone, audio_url)
+                print(f"Call placed successfully to {phone}, SID: {call_sid}")
+            except Exception as e:
+                print(f"Failed to generate audio or make call to {phone}:", e)
+                
         else:
             print(f"User {phone} has already solved {solved_today_count} problems today!")
 

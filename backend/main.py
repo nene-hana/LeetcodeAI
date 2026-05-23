@@ -6,6 +6,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from twilio.rest import Client
 
@@ -26,6 +27,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # -----------------------------
@@ -278,6 +282,26 @@ def test_whatsapp():
         from alerts.twilio_service import send_whatsapp_message
         sid = send_whatsapp_message("+917819834452", "Hello Vansh! Your Twilio WhatsApp integration on Render is working perfectly! 🚀")
         return {"status": "success", "sid": sid, "message": "WhatsApp message sent successfully."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/test-call")
+def test_call():
+    try:
+        from alerts.elevenlabs_service import generate_audio
+        from alerts.twilio_service import make_call
+        import os
+        
+        message = "Hello Vansh, this is a test call from your LeetCode AI backend. Keep coding!"
+        audio_file = generate_audio(message)
+        
+        backend_url = os.getenv("BACKEND_URL", "https://leetcodeai-backend.onrender.com")
+        if backend_url.endswith("/"):
+            backend_url = backend_url[:-1]
+            
+        audio_url = f"{backend_url}/{audio_file}"
+        sid = make_call("+917819834452", audio_url)
+        return {"status": "success", "sid": sid, "audio_url": audio_url, "message": "Call initiated successfully."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
