@@ -6,6 +6,7 @@ from datetime import datetime
 import numpy as np
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from sentence_transformers import SentenceTransformer
 
 load_dotenv()
@@ -267,11 +268,35 @@ def generate_blog(problem) -> str:
         for attempt in range(1, MAX_RETRIES + 1):
             try:
                 response = client.models.generate_content(
-                    model=model_name, contents=prompt
+                    model=model_name, 
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        safety_settings=[
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                            ),
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                            ),
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                            ),
+                            types.SafetySetting(
+                                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+                            ),
+                        ]
+                    )
                 )
 
                 if not response.text:
-                    raise Exception("Received empty response from Gemini API.")
+                    reason = "Unknown"
+                    if getattr(response, "candidates", None) and len(response.candidates) > 0:
+                        reason = getattr(response.candidates[0], "finish_reason", "No finish_reason")
+                    raise Exception(f"Received empty response from Gemini API. Finish reason: {reason}")
 
                 return _clean_response(response.text)
 

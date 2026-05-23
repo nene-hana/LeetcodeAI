@@ -224,6 +224,16 @@
         </button>
     </div>
     
+    <div id="progressContainer" style="display:none; margin-top:16px;">
+        <div style="font-size:12px; color:var(--text-small); margin-bottom:5px; display:flex; justify-content:space-between;">
+            <span id="progressText" style="font-weight:600;">Generating & Publishing...</span>
+            <span id="timeLeft" style="font-weight:600; color:var(--primary);">~15s</span>
+        </div>
+        <div style="width:100%; background:#e0e0e0; border-radius:6px; height:8px; overflow:hidden;">
+            <div id="progressBar" style="width:0%; background:var(--primary); height:100%; transition:width 0.1s linear;"></div>
+        </div>
+    </div>
+    
     <div id="status">Ready to blog! 🚀</div>
 <button id="dashboardBtn" style="margin-top:8px;background:#1a1a2e;font-size:13px;padding:10px;color:#f7a01a;width:100%;border-radius:8px;cursor:pointer;border:1px solid #f7a01a;">📊 View Dashboard</button>    
     <div class="footer">

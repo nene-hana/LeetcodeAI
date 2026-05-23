@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:10000";
+const API_BASE_URL = "https://leetcodeai-backend.onrender.com";
 
 const colors = { devto:'#3b49df', hashnode:'#2962ff', medium:'#00ab6c', webhook:'#f7a01a' };
 

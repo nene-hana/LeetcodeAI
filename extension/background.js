@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:10000";
+const API_BASE_URL = "https://leetcodeai-backend.onrender.com";
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'GENERATE_BLOG') {
         const { title, description, code, author, client_time, custom_prompt } = request.payload;

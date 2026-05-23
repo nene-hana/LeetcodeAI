@@ -2,6 +2,57 @@ let generatedBlogMarkdown = "";
 let generatedProblemTitle = "";
 let generatedBlog = "";
 
+let progressInterval;
+
+function startProgress() {
+    const container = document.getElementById('progressContainer');
+    const bar = document.getElementById('progressBar');
+    const timeEl = document.getElementById('timeLeft');
+    const statusEl = document.getElementById('status');
+    const textEl = document.getElementById('progressText');
+    
+    container.style.display = 'block';
+    statusEl.style.display = 'none';
+    
+    let progress = 0;
+    let secondsLeft = 15;
+    
+    bar.style.width = '0%';
+    timeEl.innerText = '~15s';
+    textEl.innerText = 'Generating & Publishing...';
+    
+    clearInterval(progressInterval);
+    progressInterval = setInterval(() => {
+        progress += (100 / 15) * 0.1; // 0.1s tick
+        if (progress > 95) progress = 95; // cap at 95% until done
+        
+        bar.style.width = progress + '%';
+        
+        // Update timer every second
+        if (Math.floor(progress * 15 / 100) > Math.floor((progress - (100/15)*0.1) * 15 / 100)) {
+            secondsLeft -= 1;
+            if (secondsLeft < 1) secondsLeft = 1;
+            timeEl.innerText = '~' + secondsLeft + 's';
+        }
+    }, 100);
+}
+
+function finishProgress(success) {
+    clearInterval(progressInterval);
+    const bar = document.getElementById('progressBar');
+    const timeEl = document.getElementById('timeLeft');
+    if (success) {
+        bar.style.width = '100%';
+        timeEl.innerText = 'Done!';
+    }
+    setTimeout(() => {
+        const container = document.getElementById('progressContainer');
+        const statusEl = document.getElementById('status');
+        if (container) container.style.display = 'none';
+        if (statusEl) statusEl.style.display = 'block';
+    }, success ? 1000 : 0);
+}
+
 function convertMarkdownToHTML(markdown) {
     return markdown
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -131,10 +182,9 @@ document.getElementById('generateBtn')
 
     btn.disabled = true;
 
-    statusEl.innerText =
-        "Generating blog...";
+    btn.disabled = true;
 
-    statusEl.className = "";
+    startProgress();
 
     try {
 
@@ -166,6 +216,7 @@ document.getElementById('generateBtn')
             statusEl.className =
                 "error-status";
 
+            finishProgress(false);
             btn.disabled = false;
 
             return;
@@ -211,6 +262,7 @@ document.getElementById('generateBtn')
                     statusEl.className =
                         "error-status";
 
+                    finishProgress(false);
                     btn.disabled = false;
                 }
 
@@ -227,6 +279,7 @@ document.getElementById('generateBtn')
         statusEl.className =
             "error-status";
 
+        finishProgress(false);
         btn.disabled = false;
     }
 });
@@ -272,6 +325,7 @@ chrome.runtime.onMessage.addListener((request) => {
                         .innerText =
                         "Blog generated successfully!";
 
+                    finishProgress(true);
                     document
                         .getElementById("generateBtn")
                         .disabled = false;
@@ -298,6 +352,7 @@ chrome.runtime.onMessage.addListener(
         statusEl.className = "";
 
         if (request.status === 'success') {
+            finishProgress(true);
 
             statusEl.innerText =
                 request.message ||
@@ -311,6 +366,7 @@ chrome.runtime.onMessage.addListener(
         } else if (
             request.status === 'error'
         ) {
+            finishProgress(false);
 
             statusEl.className =
                 "error-status";
@@ -320,6 +376,7 @@ chrome.runtime.onMessage.addListener(
         } else if (
             request.status === 'warning'
         ) {
+            finishProgress(true);
 
             statusEl.className =
                 "warning-status";
