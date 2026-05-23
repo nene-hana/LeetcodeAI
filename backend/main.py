@@ -272,6 +272,15 @@ def reminder_health():
 
     return {"status": "active", "message": "Reminder call infrastructure is running."}
 
+@app.get("/test-whatsapp")
+def test_whatsapp():
+    try:
+        from alerts.twilio_service import send_whatsapp_message
+        sid = send_whatsapp_message("+917819834452", "Hello Vansh! Your Twilio WhatsApp integration on Render is working perfectly! 🚀")
+        return {"status": "success", "sid": sid, "message": "WhatsApp message sent successfully."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 @app.post("/reminder/subscribe")
 async def subscribe(pref: ReminderPreference):
