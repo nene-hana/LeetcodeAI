@@ -18,12 +18,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success' || data.status === 'partial_success'){
-                    chrome.runtime.sendMessage({
-                        type: 'BLOG_GENERATED',
-                        blog: data.data?.blog_content || "",
-                        title
-                })};
- 
+                    const generatedBlog =
+                        data.data?.blog_content || "";
+
+                    chrome.storage.local.set({
+                        generatedBlog,
+                        generatedProblemTitle: title
+                    }, () => {
+
+                        chrome.runtime.sendMessage({
+                            type: "BLOG_READY"
+                        });
+
+                });
+                }
+
                 if (data.status === 'success' || data.status === 'partial_success') {
                     const platforms = data.data?.platforms || [];
                     const postedPlatforms = platforms
@@ -40,11 +49,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     };
  
                     chrome.storage.local.get({ publishHistory: [] }, (res) => {
-                        const history = res.publishHistory;
-                        const history = res.publishHistory.filter(h => h.title !== entry.title);
-                        history.unshift(entry);
-                        chrome.storage.local.set({ publishHistory: history.slice(0, 100) });
+
+                    const history =
+                        res.publishHistory.filter(
+                            h => h.title !== entry.title
+                        );
+
+                    history.unshift(entry);
+
+                    chrome.storage.local.set({
+                        publishHistory:
+                            history.slice(0, 100)
                     });
+                });
  
                     fetch(`${API_BASE_URL}/dashboard/record`, {
                         method: "POST",
