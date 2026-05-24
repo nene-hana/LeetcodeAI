@@ -12,9 +12,9 @@ from twilio.rest import Client
 
 from ai import generate_blog
 from devto import publish_to_platforms
-from social import share_to_platforms
 from models.reminder import PublishRecord
 from services.reminder_scheduler import start_scheduler
+from social import share_to_platforms
 
 load_dotenv()
 
@@ -102,17 +102,17 @@ async def create_blog(problem: Problem):
     1. Generates a blog using Gemini AI
     2. Publishes it to one or more configured platforms
     """
-    
+
     # Check if the user has already published a successful blog for this problem
     existing_record = await db.problem_info.find_one({
         "title": problem.title,
         "author": problem.author,
         "status": "success"
     })
-    
+
     if existing_record:
         return {
-            "status": "error", 
+            "status": "error",
             "message": f"Solution for '{problem.title}' has already been published! Keep up the great streak!"
         }
 
@@ -181,12 +181,12 @@ async def create_blog(problem: Problem):
             if res.get("url"):
                 post_url = res["url"]
                 break
-        
+
         if post_url:
             try:
                 social_results = share_to_platforms(
-                    title=problem.title, 
-                    post_url=post_url, 
+                    title=problem.title,
+                    post_url=post_url,
                     tags=problem.tags
                 )
             except Exception as e:
@@ -293,8 +293,9 @@ def reminder_health():
 @app.get("/test-whatsapp")
 def test_whatsapp():
     try:
-        from alerts.twilio_service import send_whatsapp_message
         import os
+
+        from alerts.twilio_service import send_whatsapp_message
         phone = os.getenv("TEST_PHONE_NUMBER")
         if not phone:
             return {"status": "error", "message": "TEST_PHONE_NUMBER is not set in environment."}
@@ -306,23 +307,24 @@ def test_whatsapp():
 @app.get("/test-call")
 def test_call():
     try:
+        import os
+
         from alerts.elevenlabs_service import generate_audio, generate_message
         from alerts.twilio_service import make_call
-        import os
-        
+
         message = generate_message("Vansh")
-        
+
         try:
             audio_file = generate_audio(message)
             backend_url = os.getenv("BACKEND_URL", "https://leetcodeai-backend.onrender.com")
             if backend_url.endswith("/"):
                 backend_url = backend_url[:-1]
             audio_url = f"{backend_url}/{audio_file}"
-            
+
             phone = os.getenv("TEST_PHONE_NUMBER")
             if not phone:
                 return {"status": "error", "message": "TEST_PHONE_NUMBER is not set in environment."}
-                
+
             sid = make_call(phone, audio_url=audio_url)
             return {"status": "success", "sid": sid, "audio_url": audio_url, "message": "Call initiated successfully with ElevenLabs."}
         except Exception as el_err:
@@ -331,7 +333,7 @@ def test_call():
             phone = os.getenv("TEST_PHONE_NUMBER")
             if not phone:
                 return {"status": "error", "message": "TEST_PHONE_NUMBER is not set in environment."}
-                
+
             sid = make_call(phone, text_to_say=message)
             return {"status": "success", "sid": sid, "message": "ElevenLabs failed (Free Tier VPN block), but Twilio TTS call initiated successfully.", "elevenlabs_error": str(el_err)}
     except Exception as e:

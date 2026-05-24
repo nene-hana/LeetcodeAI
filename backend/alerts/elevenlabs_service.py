@@ -1,6 +1,8 @@
 import os
+
 from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
+
 
 def get_elevenlabs_client():
     api_key = os.getenv("ELEVENLABS_API_KEY")
@@ -16,7 +18,7 @@ def generate_audio(text: str) -> str:
     client = get_elevenlabs_client()
     if not client:
         raise ValueError("ELEVENLABS_API_KEY is not set")
-        
+
     # Resolve voice ID dynamically
     target_voice_name = "Anya"
     selected_voice_id = "21m00Tcm4TlvDq8ikWAM" # Fallback Rachel
@@ -42,12 +44,12 @@ def generate_audio(text: str) -> str:
             use_speaker_boost=True,
         ),
     )
-    
+
     os.makedirs("static", exist_ok=True)
     file_path = "static/reminder.mp3"
     with open(file_path, "wb") as f:
         for chunk in response:
             if chunk:
                 f.write(chunk)
-                
+
     return file_path

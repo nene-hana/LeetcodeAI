@@ -1,8 +1,10 @@
 import os
-import requests
 from dataclasses import dataclass
 from typing import Any
+
+import requests
 import tweepy
+
 
 @dataclass(frozen=True)
 class SocialResult:
@@ -141,9 +143,9 @@ def share_to_platforms(title: str, post_url: str, tags: list[str] | None = None)
         for tag in (tags or ["leetcode", "dsa"])
         if tag and tag.strip()
     ][:4]
-    
+
     results: list[SocialResult] = []
-    
+
     for platform_name, sharer in SHARERS.items():
         try:
             results.append(
@@ -157,5 +159,5 @@ def share_to_platforms(title: str, post_url: str, tags: list[str] | None = None)
                     message=str(exc)
                 )
             )
-    
+
     return [r.as_dict() for r in results]

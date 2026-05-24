@@ -1,5 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
+
 from alerts.progress_checker import check_unsolved_users
 
 scheduler = BackgroundScheduler()
